@@ -1,74 +1,85 @@
 package ru.kata.spring.boot_security.demo.model;
 
-
+import org.hibernate.annotations.Cascade;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.transaction.annotation.Transactional;
-import ru.kata.spring.boot_security.demo.model.validator.CheckEmail;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "first_name")
-    @Size(min = 2, max = 15, message = "Name must be min 2 symbols")
-    @NotBlank(message = "Name should not be empty")
-    @Pattern(regexp = "^[A-Za-zА-Яа-яЁё]{2,15}$")
-    private String firstName;
-    @Column(name = "last_name")
-    @Size(min = 2, max = 25, message = "Last Name must be min 2 symbols")
-    @NotBlank(message = "Last Name should not be empty")
-    @Pattern(regexp = "^[A-Za-zА-Яа-яЁё]{2,25}$")
-    private String lastName;
-    @Column(name = "age", nullable = false)
-    @NotNull(message = "Age should not be empty")
-    @Min(value = 18, message = "must be greater than 17")
-    @Max(value = 100, message = "must be less than 101")
-    private int age;
     @Column(name = "email", nullable = false, unique = true)
-    @Size(min = 7, max = 40, message = "Email must be min 7 symbols")
-    //@CheckEmail
+    @NotBlank(message = "Поле username не может быть пустым")
+    @Size(min = 5, max = 50, message = "Поле должно содержать от 5 до 50 символов")
     @Email
-    private String email;
+    private String username;
+    @Column(name = "first_name", nullable = false)
+    @NotBlank(message = "Поле First Name не может быть пустым")
+    @Size(min = 1, max = 50, message = "Поле должно содержать от 1 до 50 символов")
+    private String firstName;
+    @Column(name = "last_name", nullable = false)
+    @NotBlank(message = "Поле Last name не может быть пустым")
+    @Size(min = 1, max = 50, message = "Поле должно содержать от 1 до 50 символов")
+    private String lastName;
+    @Column(name = "age")
+    private int age;
     @Column(name = "password", nullable = false)
-    @NotBlank(message = "Password should not be empty")
-    //@Size(min = 4, max = 50, message = "Password must be min 4 symbols")
-    //@Pattern(regexp = "^[a-zA-Z0-9]+$")
+    @NotBlank(message = "Поле password не может быть пустым")
     private String password;
-
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
-    private Set<Role> roles = new HashSet<>();
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+    private Set<Role> roleList;
+    public User() {   }
 
-    public User() {
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
-    public User(String firstName, String lastName, int age, String email,  String password, Set<Role> roles) {
+    public User(String username, String firstName, String lastName, int age,
+                String password, Set<Role> roleList) {
+        this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
-        this.email = email;
         this.password = password;
-        this.roles = roles;
+        this.roleList = roleList;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
+    public User(Long id, String firstName, String lastName, int age, String username,
+                String password, Set<Role> roleList) {
         this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.username = username;
+        this.password = password;
+        this.roleList = roleList;
+
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", age=" + age +
+                ", password='" + password + '\'' +
+                ", roleList=" + roleList +
+                '}';
     }
 
     public String getFirstName() {
@@ -87,32 +98,52 @@ public class User implements UserDetails {
         this.lastName = lastName;
     }
 
-    @Override
-    public String getUsername() {
-        return email;
+    public int getAge() {
+        return age;
     }
-    @Override
-    public String getPassword() {
-        return password;
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setPassword(String password) {
         this.password = password;
     }
 
-    @Transactional
-    public Collection<Role> getRoles() {
-        return roles;
+    public Set<Role> getRoleList() {
+        return roleList;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+    public void setRoleList(Set<Role> roleList) {
+        this.roleList = roleList;
     }
 
-    // Методы интерфейса
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles;
+
+        return getRoleList();
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
     }
 
     @Override
@@ -135,20 +166,13 @@ public class User implements UserDetails {
         return true;
     }
 
-
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public String roleToString(){
+        StringBuilder sb = new StringBuilder();
+        for(Role role: roleList){
+            sb.append(role.getNameRole()).append(" ");
+        }
+        return sb.toString();
     }
 }
+
+

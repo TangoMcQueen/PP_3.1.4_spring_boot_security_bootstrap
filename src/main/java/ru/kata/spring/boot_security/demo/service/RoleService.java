@@ -8,7 +8,5 @@ import java.util.List;
 @Component
 public interface RoleService {
     List<Role>  getAllRoles();
-    void save(Role role);
-    void deleteUser(Long id);
-    Role findById(Long id);
+    Role findByName(String name);
 }
