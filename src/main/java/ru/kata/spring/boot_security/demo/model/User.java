@@ -5,9 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.util.*;
 
 @Entity
@@ -17,22 +15,25 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "email", nullable = false, unique = true)
-    @NotBlank(message = "Поле username не может быть пустым")
+    @NotBlank(message = "Username should not be empty")
     @Size(min = 5, max = 50, message = "Поле должно содержать от 5 до 50 символов")
     @Email
     private String username;
     @Column(name = "first_name", nullable = false)
-    @NotBlank(message = "Поле First Name не может быть пустым")
-    @Size(min = 1, max = 50, message = "Поле должно содержать от 1 до 50 символов")
+    @NotBlank(message = "First Name should not be empty")
+    @Size(min = 2, max = 15, message = "Поле должно содержать от 2 до 15 символов")
     private String firstName;
     @Column(name = "last_name", nullable = false)
-    @NotBlank(message = "Поле Last name не может быть пустым")
-    @Size(min = 1, max = 50, message = "Поле должно содержать от 1 до 50 символов")
+    @NotBlank(message = "Last name should not be empty")
+    @Size(min = 2, max = 25, message = "Поле должно содержать от 2 до 25 символов")
     private String lastName;
     @Column(name = "age")
+    @NotNull(message = "Age should not be empty")
+    @Min(value = 18, message = "must be greater than 17")
+    @Max(value = 100, message = "must be less than 101")
     private int age;
     @Column(name = "password", nullable = false)
-    @NotBlank(message = "Поле password не может быть пустым")
+    @NotBlank(message = "Password should not be empty")
     private String password;
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles",
